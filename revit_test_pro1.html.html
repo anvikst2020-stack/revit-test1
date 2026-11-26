@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Тест по Revit | САПР PRO</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  body {
+    background: linear-gradient(135deg, #ffffff 0%, #e0f2ff 50%, #b3d9ff 100%);
+    min-height: 100vh; padding: 20px; color: #1a3a5c;
+    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+  }
+  .container {
+    max-width: 1000px; margin: 0 auto; background: #ffffff;
+    border-radius: 16px; box-shadow: 0 8px 32px rgba(100, 160, 220, 0.25);
+    padding: 30px 40px; border: 1px solid #cce4f7;
+  }
+  h1 { text-align: center; color: #1e5a8a; margin-bottom: 8px; font-size: 28px; }
+  .subtitle { text-align: center; color: #5a8ab5; margin-bottom: 25px; font-size: 14px; }
+  .info-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(90deg, #e6f3ff, #cce4f7);
+    padding: 12px 20px; border-radius: 10px; margin-bottom: 15px;
+    border-left: 5px solid #4a90c2; flex-wrap: wrap; gap: 10px;
+  }
+  .timer { font-size: 18px; font-weight: bold; color: #1e5a8a; }
+  .timer.warning { color: #c44; animation: pulse 1s infinite; }
+  .timer-small { font-size: 13px; color: #5a8ab5; margin-left: 10px; }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+  .progress-bar { height: 8px; background: #e6f3ff; border-radius: 4px; overflow: hidden; margin-bottom: 15px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #7ab8e0, #4a90c2); transition: width 0.3s; }
+  .form-group { margin-bottom: 15px; }
+  label { display: block; margin-bottom: 6px; color: #1e5a8a; font-weight: 600; }
+  input[type="text"], input[type="email"] {
+    width: 100%; padding: 10px 14px; border: 2px solid #b3d9ff;
+    border-radius: 8px; font-size: 15px; background: #f7fbff; transition: border 0.2s;
+  }
+  input:focus { outline: none; border-color: #4a90c2; background: #fff; }
+  .btn {
+    background: linear-gradient(135deg, #4a90c2, #2d6fa0); color: white; border: none;
+    padding: 12px 25px; border-radius: 8px; font-size: 15px; cursor: pointer;
+    font-weight: 600; transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,144,194,0.4); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-secondary { background: linear-gradient(135deg, #7ab8e0, #5a9ac8); }
+  .btn-hint { background: linear-gradient(135deg, #f0c674, #d9a441); }
+  .btn-danger { background: linear-gradient(135deg, #e07a7a, #c44); }
+  .question {
+    background: #f7fbff; border: 1px solid #cce4f7; border-radius: 12px;
+    padding: 25px; margin-bottom: 15px; min-height: 400px;
+  }
+  .question-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 15px; flex-wrap: wrap; gap: 8px;
+  }
+  .q-number { background: #4a90c2; color: white; padding: 5px 14px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+  .q-type { background: #e6f3ff; color: #1e5a8a; padding: 5px 12px; border-radius: 20px; font-size: 12px; }
+  .q-difficulty { font-size: 12px; color: #5a8ab5; }
+  .q-text { font-size: 17px; color: #1a3a5c; margin-bottom: 15px; line-height: 1.6; }
+  .q-image {
+    background: white; border: 2px solid #b3d9ff; border-radius: 10px;
+    padding: 15px; margin: 15px 0; text-align: center;
+  }
+  .q-image svg { max-width: 100%; height: auto; }
+  .option {
+    display: block; padding: 12px 16px; margin: 8px 0;
+    background: white; border: 2px solid #cce4f7; border-radius: 8px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .option:hover { background: #e6f3ff; border-color: #7ab8e0; }
+  .option input { margin-right: 10px; }
+  .option.selected { background: #cce4f7; border-color: #4a90c2; }
+  .match-table { width: 100%; border-collapse: collapse; }
+  .match-table td { padding: 8px; }
+  .match-table select {
+    width: 100%; padding: 8px; border: 2px solid #b3d9ff; border-radius: 6px; background: white;
+  }
+  .nav-buttons {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 20px; gap: 10px; flex-wrap: wrap;
+  }
+  .q-dots { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin: 15px 0; }
+  .q-dot {
+    width: 28px; height: 28px; border-radius: 50%; background: #e6f3ff;
+    border: 2px solid #b3d9ff; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: bold; color: #1e5a8a; cursor: pointer; transition: all 0.2s;
+  }
+  .q-dot:hover { background: #cce4f7; }
+  .q-dot.current { background: #4a90c2; color: white; border-color: #1e5a8a; }
+  .q-dot.answered { background: #7ab8e0; color: white; }
+  .q-dot.hinted { background: #f0c674; color: white; border-color: #d9a411; }
+  .hint-box {
+    background: #fff9e6; border-left: 4px solid #f0c674; padding: 12px 16px;
+    margin: 15px 0; border-radius: 6px; font-size: 14px; color: #8a6d1f;
+  }
+  .result-box {
+    text-align: center; padding: 30px;
+    background: linear-gradient(135deg, #e6f3ff, #cce4f7);
+    border-radius: 12px; margin-top: 20px;
+  }
+  .score { font-size: 56px; color: #1e5a8a; font-weight: bold; margin: 10px 0; }
+  .result-details {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px; margin: 20px 0;
+  }
+  .result-card {
+    background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #4a90c2;
+  }
+  .result-card .num { font-size: 24px; font-weight: bold; color: #1e5a8a; }
+  .result-card .lbl { font-size: 13px; color: #5a8ab5; }
+  .warning-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(30, 90, 138, 0.95); color: white;
+    display: none; justify-content: center; align-items: center;
+    flex-direction: column; z-index: 9999; text-align: center; padding: 30px;
+  }
+  .warning-overlay h2 { font-size: 32px; margin-bottom: 20px; }
+  .warning-overlay p { font-size: 18px; max-width: 600px; line-height: 1.6; }
+  .start-screen { text-align: center; padding: 20px; }
+  .rules {
+    background: #f7fbff; border-left: 4px solid #4a90c2;
+    padding: 15px 20px; margin: 20px 0; text-align: left; border-radius: 8px;
+  }
+  .rules li { margin: 8px 0; line-height: 1.5; }
+  .hidden { display: none !important; }
+  /* СЕРТИФИКАТ */
+  .certificate {
+    background: white; border: 12px double #4a90c2; border-radius: 16px;
+    padding: 40px; margin: 20px auto; max-width: 800px; position: relative;
+    background-image: radial-gradient(circle at 20% 20%, #e6f3ff 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, #cce4f7 0%, transparent 50%);
+  }
+  .certificate::before {
+    content: ''; position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px;
+    border: 2px solid #7ab8e0; border-radius: 10px; pointer-events: none;
+  }
+  .cert-header { text-align: center; margin-bottom: 20px; }
+  .cert-title { font-size: 36px; color: #1e5a8a; font-weight: bold; letter-spacing: 3px; }
+  .cert-subtitle { font-size: 18px; color: #5a8ab5; margin-top: 5px; }
+  .cert-seal {
+    width: 80px; height: 80px; margin: 10px auto;
+    background: radial-gradient(circle, #4a90c2, #1e5a8a);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: bold; font-size: 12px; text-align: center;
+    box-shadow: 0 4px 12px rgba(74,144,194,0.4);
+  }
+  .cert-body { text-align: center; font-size: 18px; line-height: 2; color: #1a3a5c; }
+  .cert-name { font-size: 28px; color: #1e5a8a; font-weight: bold; border-bottom: 2px solid #4a90c2; display: inline-block; padding: 0 20px; margin: 10px 0; }
+  .cert-score { font-size: 48px; color: #4a90c2; font-weight: bold; margin: 15px 0; }
+  .cert-footer { display: flex; justify-content: space-between; margin-top: 40px; font-size: 14px; color: #5a8ab5; }
+  .cert-sign { text-align: center; }
+  .cert-sign-line { border-top: 1px solid #5a8ab5; width: 200px; margin: 5px auto; }
+  @media print {
+    body { background: white; padding: 0; }
+    .container { box-shadow: none; border: none; padding: 0; }
+    .no-print { display: none !important; }
+    .certificate { border: 12px double #4a90c2; page-break-inside: avoid; }
+  }
+  .gs-status { font-size: 12px; padding: 6px 12px; border-radius: 6px; margin-top: 10px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<div id="warningOverlay" class="warning-overlay">
+  <h2>⚠️ Внимание!</h2>
+  <p>Вы покинули вкладку теста. Это нарушение правил.<br>
+  Предупреждений: <span id="warnCount">0</span> / 3<br><br>
+  Вернитесь на вкладку теста!</p>
+</div>
+
+<div class="container">
+  <h1>🏗️ Контрольный тест по Autodesk Revit</h1>
+  <p class="subtitle">Дисциплина: САПР | Разделы: Введение, Интерфейс, Инструменты рисования</p>
+
+  <!-- ЭКРАН СТАРТА -->
+  <div id="startScreen" class="start-screen">
+    <div class="form-group">
+      <label>ФИО студента *</label>
+      <input type="text" id="fio" placeholder="Иванов Иван Иванович">
+    </div>
+    <div class="form-group">
+      <label>Номер группы *</label>
+      <input type="text" id="group" placeholder="САПР-21">
+    </div>
+    <div class="form-group">
+      <label>Email преподавателя</label>
+      <input type="email" id="teacherEmail" placeholder="teacher@example.com" value="teacher@example.com">
+    </div>
+
+    <div class="rules">
+      <strong>📋 Правила прохождения теста:</strong>
+      <ul>
+        <li>⏱️ Общее время — <b>15 минут</b> + таймер на каждый вопрос</li>
+        <li>📝 <b>15 вопросов</b> из большого пула (случайный выбор)</li>
+        <li>🎯 Максимальный балл — <b>10</b> (10-балльная шкала)</li>
+        <li>🔀 Вопросы и варианты перемешиваются случайно</li>
+        <li>◀️▶️ Можно возвращаться к предыдущим вопросам</li>
+        <li>💡 Подсказки доступны, но <b>снижают балл за вопрос на 50%</b></li>
+        <li>🚫 Запрещено переключать вкладки (3 предупреждения = автозавершение)</li>
+        <li>📊 Результаты → Excel (без правильных ответов) + Google Таблица преподавателя</li>
+      </ul>
+    </div>
+
+    <button class="btn" onclick="startTest()">▶️ Начать тест</button>
+  </div>
+
+  <!-- ЭКРАН ТЕСТА -->
+  <div id="testScreen" class="hidden">
+    <div class="info-bar">
+      <div><b>Студент:</b> <span id="studentInfo"></span></div>
+      <div>
+        <span class="timer" id="timer">⏱️ 15:00</span>
+        <span class="timer-small" id="qTimer">⏳ на вопрос: 00:00</span>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="q-dots" id="qDots"></div>
+    <div id="questionArea"></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="prevBtn" onclick="prevQuestion()">◀️ Назад</button>
+      <button class="btn btn-hint" id="hintBtn" onclick="showHint()">💡 Подсказка (-50%)</button>
+      <button class="btn" id="nextBtn" onclick="nextQuestion()">Далее ▶️</button>
+      <button class="btn btn-danger" onclick="finishTest()">🏁 Завершить</button>
+    </div>
+  </div>
+
+  <!-- ЭКРАН РЕЗУЛЬТАТОВ -->
+  <div id="resultScreen" class="hidden">
+    <div class="result-box">
+      <h2 style="color:#1e5a8a;">🎓 Тест завершён!</h2>
+      <div class="score"><span id="finalScore">0</span> / 10</div>
+      <div class="result-details">
+        <div class="result-card"><div class="num" id="correctCount">0</div><div class="lbl">Правильных</div></div>
+        <div class="result-card"><div class="num" id="wrongCount">0</div><div class="lbl">Неправильных</div></div>
+        <div class="result-card"><div class="num" id="timeSpent">0</div><div class="lbl">Затрачено (сек)</div></div>
+        <div class="result-card"><div class="num" id="hintsUsed">0</div><div class="lbl">Подсказок</div></div>
+      </div>
+      <div id="gradeText" style="font-size:18px; margin:15px 0; color:#1e5a8a;"></div>
+      <div id="gsStatus"></div>
+      <div style="margin-top:20px;">
+        <button class="btn" onclick="downloadExcel()">📊 Скачать Excel (без ответов)</button>
+        <button class="btn" onclick="showCertificate()">🏆 Показать сертификат</button>
+        <button class="btn" onclick="sendEmail()">📧 Отправить на почту</button>
+        <button class="btn" onclick="window.print()">🖨️ Печать</button>
+        <button class="btn btn-secondary" onclick="location.reload()">🔄 Новый тест</button>
+      </div>
+    </div>
+    <div id="certificateArea"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 🎯 GOOGLE SHEETS INTEGRATION
+// ============================================================
+// ИНСТРУКЦИЯ: Создайте Google Таблицу → Расширения → Apps Script
+// Вставьте функцию doPost (см. документацию), разверните как Веб-приложение (Доступ: Все)
+// Вставьте полученный URL ниже:
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziSrJLDNPxBeB-u7cTkrdvGdV5NOY8vM9V3W3Qos_5OTyZZAFQQopnYXlPb9s58cpYZA/exec"; 
+
+// ============================================================
+// 📚 БАЗА ВОПРОСОВ (35+ вопросов из предоставленных файлов)
+// ============================================================
+const allQuestions = [
+  { type: 'single', difficulty: 'Лёгкий', points: 0.5, text: 'Что означает аббревиатура САПР?', options: ['Система автоматизированного проектирования', 'Современная архитектура проектных решений', 'Стандарт автоматической подготовки рисунков', 'Система анализа проектных работ'], correct: 0 },
+  { type: 'single', difficulty: 'Лёгкий', points: 0.5, text: 'Что такое BIM-модель?', options: ['Электронный трёхмерный прототип здания в масштабе 1:1', 'Простой двумерный чертёж здания', 'Фотография готового сооружения', 'Набор текстовых описаний проекта'], correct: 0 },
+  { type: 'single', difficulty: 'Средний', points: 0.75, text: 'Как называется иерархическая структура всех видов, листов и спецификаций проекта в Revit?', options: ['Диспетчер проекта', 'Окно «Свойства»', 'Лента инструментов', 'Панель навигации'], correct: 0 },
+  { type: 'single', difficulty: 'Средний', points: 0.75, text: 'Какая вкладка в Revit является КОНТЕКСТНОЙ (динамической)?', options: ['Изменить', 'Архитектура', 'Вид', 'Управление'], correct: 0 },
+  { type: 'single', difficulty: 'Средний', points: 0.75, text: 'Горячие клавиши для сохранения проекта в Revit:', options: ['Ctrl + S', 'Ctrl + P', 'Alt + F4', 'Ctrl + N'], correct: 0 },
+  { type: 'single', difficulty: 'Сложный', points: 1, text: 'Сколько резервных копий (бэкапов) по умолчанию создаёт Revit при сохранении?', options: ['20', '5', '10', '50'], correct: 0 },
+  { type: 'single', difficulty: 'Сложный', points: 1, text: 'Почему в Revit невозможно сохранить файл для более старой версии программы?', options: ['Геометрия в Revit — вторичные данные, и новый функционал может некорректно интерпретироваться старой версией', 'Это ограничение лицензионного соглашения Autodesk', 'Старые версии не поддерживают формат .rvt', 'Разработчики специально блокируют такую возможность'], correct: 0 },
+  { type: 'single', difficulty: 'Средний', points: 0.75, text: 'Файл шаблона проекта в Revit имеет расширение:', options: ['.rte', '.rvt', '.rfa', '.ifc'], correct: 0 },
+  { type: 'single', difficulty: 'Средний', points: 0.75, text: 'В Revit существуют две рабочие среды. Как они называются?', options: ['«Модель» и «Семейства»', '«Проект» и «Чертежи»', '«Архитектура» и «Конструкции»', '«2D» и «3D»'], correct: 0 },
+  { type: 'single', difficulty: 'Средний', points: 0.75, text: 'Где в интерфейсе Revit отображаются параметры выделенного элемента (высота, тип, материал)?', options: ['Окно «Свойства»', 'Диспетчер проекта', 'Лента', 'Строка состояния'], correct: 0 },
+  { type: 'single', difficulty: 'Средний', points: 0.75, text: 'На какой вкладке находятся инструменты «Стена», «Окно», «Дверь»?', options: ['Архитектура', 'Конструкции', 'Системы', 'Вид'], correct: 0 },
+  { type: 'single', difficulty: 'Сложный', points: 1, text: 'Какой цвет подсветки имеет контекстная вкладка «Изменить» при активации?', options: ['Зелёный', 'Синий', 'Красный', 'Жёлтый'], correct: 0 },
+  { type: 'single', difficulty: 'Средний', points: 0.75, text: 'Как вернуть случайно закрытое окно «Диспетчер проекта»?', options: ['Вид → Окна → Интерфейс пользователя', 'Файл → Восстановить окна', 'Ctrl + Z', 'Это невозможно, нужно перезапустить Revit'], correct: 0 },
+  { type: 'single', difficulty: 'Сложный', points: 1, text: 'Для экспорта геометрии Revit в более старую версию (как подложку) используется формат:', options: ['IFC', 'DWG', 'PDF', 'SAT'], correct: 0 },
+  { type: 'single', difficulty: 'Средний', points: 0.75, text: 'Что отображается в «Области моделирования»?', options: ['Виды, листы и спецификации текущей модели', 'Только 3D-виды', 'Список всех семейств', 'Только листы для печати'], correct: 0 },
+  { type: 'single', difficulty: 'Сложный', points: 1, text: 'Какое основное правило работы в команде вытекает из невозможности сохранения в старую версию?', options: ['Начинать и заканчивать проект нужно в одной версии Revit', 'Каждый участник должен работать в своей версии', 'Файлы нужно передавать только по email', 'Нужно использовать только облачные хранилища'], correct: 0 },
+  { type: 'multiple', difficulty: 'Средний', points: 1, text: 'Выберите ВСЕ элементы пользовательского интерфейса Revit:', options: ['Лента инструментов', 'Диспетчер проекта', 'Окно «Свойства»', 'Панель быстрого доступа', 'Командная строка AutoCAD'], correct: [0, 1, 2, 3] },
+  { type: 'multiple', difficulty: 'Сложный', points: 1, text: 'Какие преимущества даёт BIM-технология? (несколько ответов)', options: ['Снижение ошибок и коллизий', 'Оптимизация проектных решений', 'Полный жизненный цикл объекта', 'Автоматическая генерация идей архитектором', 'Эффективное управление проектом'], correct: [0, 1, 2, 4] },
+  { type: 'multiple', difficulty: 'Средний', points: 1, text: 'Какие способы сохранения проекта существуют в Revit?', options: ['Ctrl + S', 'Панель быстрого доступа (иконка дискеты)', 'Меню Файл → Сохранить', 'Ctrl + P', 'Alt + F4'], correct: [0, 1, 2] },
+  { type: 'multiple', difficulty: 'Средний', points: 1, text: 'Какие вкладки относятся к СТАТИЧНЫМ (всегда одинаковый набор инструментов)?', options: ['Архитектура', 'Вид', 'Управление', 'Изменить'], correct: [0, 1, 2] },
+  { type: 'truefalse', difficulty: 'Лёгкий', points: 0.5, text: 'В Revit стена «знает», что она стена, и содержит свойства: высоту, толщину, объём, материал.', correct: true },
+  { type: 'truefalse', difficulty: 'Средний', points: 0.75, text: 'Файл, созданный в Revit 2022, можно открыть в Revit 2021 без потери данных.', correct: false },
+  { type: 'truefalse', difficulty: 'Средний', points: 0.75, text: 'В Revit существуют две рабочие среды: «Модель» и «Семейства».', correct: true },
+  { type: 'truefalse', difficulty: 'Средний', points: 0.75, text: 'Панели инструментов на ленте можно выносить в отдельные плавающие окна.', correct: true },
+  { type: 'truefalse', difficulty: 'Сложный', points: 1, text: 'Контекстная вкладка «Изменить» закрывается автоматически после завершения работы с инструментом.', correct: true },
+  { type: 'match', difficulty: 'Средний', points: 1, text: 'Установите соответствие между элементом интерфейса и его назначением:', pairs: [{ left: 'Диспетчер проекта', right: 'Иерархия видов, листов, спецификаций' }, { left: 'Окно «Свойства»', right: 'Параметры выделенного элемента' }, { left: 'Лента', right: 'Все инструменты для создания проекта' }, { left: 'Панель управления видом', right: 'Масштаб, обрезка, отображение' }] },
+  { type: 'match', difficulty: 'Сложный', points: 1, text: 'Соотнесите элемент интерфейса с его описанием:', pairs: [{ left: 'Панель быстрого доступа', right: 'Набор часто используемых инструментов (Сохранить, Отменить)' }, { left: 'Строка состояния', right: 'Подсказки и имя выделенного элемента' }, { left: 'Инфоцентр', right: 'Доступ к справочной информации' }, { left: 'Панель параметров', right: 'Специфические инструменты выбранного инструмента' }] },
+  { type: 'short', difficulty: 'Средний', points: 0.75, text: 'Как называется вкладка, на которой находятся инструменты «Стена», «Окно», «Дверь»?', answers: ['архитектура'], hint: 'Подсказка: эта вкладка относится к основным строительным элементам здания.' },
+  { type: 'short', difficulty: 'Сложный', points: 1, text: 'Какое расширение имеет файл шаблона проекта в Revit?', answers: ['rte', '.rte'], hint: 'Подсказка: это НЕ .rvt и НЕ .rfa. Шаблон — это "заготовка".' },
+  { type: 'short', difficulty: 'Средний', points: 0.75, text: 'Какие горячие клавиши используются для сохранения проекта?', answers: ['ctrl+s', 'ctrl + s'], hint: 'Подсказка: первая клавиша — "Control", вторая — первая буква английского слова "Save".' },
+  { type: 'image', difficulty: 'Средний', points: 1, text: 'Что изображено на рисунке? Укажите название элемента интерфейса.', image: 'save_icon', options: ['Кнопка «Сохранить» на панели быстрого доступа', 'Кнопка «Открыть»', 'Кнопка «Печать»', 'Кнопка «Экспорт»'], correct: 0, hint: 'Подсказка: классический символ хранения данных — дискета.' },
+  { type: 'image', difficulty: 'Средний', points: 1, text: 'Что изображено на схеме?', image: 'project_browser', options: ['Диспетчер проекта', 'Окно «Свойства»', 'Лента инструментов', 'Область моделирования'], correct: 0, hint: 'Подсказка: этот элемент обычно расположен слева и содержит иерархию видов.' },
+  { type: 'image', difficulty: 'Средний', points: 1, text: 'Какой элемент интерфейса показан на рисунке?', image: 'properties', options: ['Окно «Свойства» (Properties)', 'Диспетчер проекта', 'Панель параметров', 'Строка состояния'], correct: 0, hint: 'Подсказка: здесь отображаются параметры выделенного элемента.' },
+  { type: 'image', difficulty: 'Сложный', points: 1, text: 'Что показывает данная иконка на ленте?', image: 'wall_tool', options: ['Инструмент «Стена»', 'Инструмент «Линия»', 'Инструмент «Перекрытие»', 'Инструмент «Крыша»'], correct: 0, hint: 'Подсказка: это основной вертикальный ограждающий элемент здания.' },
+  { type: 'image', difficulty: 'Средний', points: 1, text: 'Какой элемент показан на рисунке?', image: 'view_cube', options: ['ViewCube (куб навигации)', 'Диспетчер проекта', '3D-вид', 'Панель управления видом'], correct: 0, hint: 'Подсказка: расположен в правом верхнем углу области моделирования.' },
+  { type: 'image', difficulty: 'Средний', points: 1, text: 'Что это за элемент?', image: 'ribbon', options: ['Лента инструментов (Ribbon)', 'Панель быстрого доступа', 'Строка состояния', 'Диспетчер проекта'], correct: 0, hint: 'Подсказка: горизонтальная панель с вкладками в верхней части окна.' },
+  { type: 'image', difficulty: 'Сложный', points: 1, text: 'Какая иконка показана на рисунке?', image: 'home_3d', options: ['Кнопка «Дом» (базовый 3D-вид)', 'Кнопка «Сохранить»', 'Кнопка «Печать»', 'Кнопка «Экспорт»'], correct: 0, hint: 'Подсказка: используется для быстрого возврата к стандартному 3D-виду.' },
+  { type: 'image', difficulty: 'Средний', points: 1, text: 'Что изображено на рисунке?', image: 'undo_redo', options: ['Кнопки «Отменить» и «Повторить»', 'Кнопки «Копировать» и «Вставить»', 'Кнопки «Сохранить» и «Открыть»', 'Кнопки «Вырезать» и «Стереть»'], correct: 0, hint: 'Подсказка: расположены на панели быстрого доступа, стрелки в разные стороны.' }
+];
+
+// ============================================================
+// 🖼️ SVG-ИЗОБРАЖЕНИЯ ЭЛЕМЕНТОВ ИНТЕРФЕЙСА
+// ============================================================
+const svgImages = {
+  save_icon: `<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="100" height="100" rx="8" fill="#4a90c2" stroke="#1e5a8a" stroke-width="3"/><rect x="25" y="10" width="70" height="35" fill="#1e5a8a"/><rect x="70" y="15" width="15" height="25" fill="#e6f3ff"/><rect x="25" y="65" width="70" height="40" fill="#e6f3ff" stroke="#1e5a8a" stroke-width="2"/><rect x="35" y="75" width="50" height="5" fill="#1e5a8a"/><rect x="35" y="85" width="50" height="5" fill="#1e5a8a"/><rect x="35" y="95" width="30" height="5" fill="#1e5a8a"/></svg>`,
+  project_browser: `<svg width="280" height="200" viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="270" height="190" fill="#f7fbff" stroke="#4a90c2" stroke-width="2" rx="4"/><rect x="5" y="5" width="270" height="25" fill="#4a90c2"/><text x="15" y="22" fill="white" font-size="12" font-weight="bold">Диспетчер проекта</text><text x="15" y="50" font-size="11" fill="#1a3a5c">▼ Виды (все)</text><text x="25" y="70" font-size="11" fill="#1a3a5c">  ▼ Планы этажей</text><text x="40" y="88" font-size="11" fill="#4a90c2">    📄 Уровень 1</text><text x="40" y="105" font-size="11" fill="#4a90c2">    📄 Уровень 2</text><text x="25" y="125" font-size="11" fill="#1a3a5c">  ▶ Фасады</text><text x="25" y="145" font-size="11" fill="#1a3a5c">  ▶ Разрезы</text><text x="25" y="165" font-size="11" fill="#1a3a5c">  ▶ 3D-виды</text><text x="15" y="185" font-size="11" fill="#1a3a5c">▶ Листы</text></svg>`,
+  properties: `<svg width="280" height="200" viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="270" height="190" fill="#f7fbff" stroke="#4a90c2" stroke-width="2" rx="4"/><rect x="5" y="5" width="270" height="25" fill="#4a90c2"/><text x="15" y="22" fill="white" font-size="12" font-weight="bold">Свойства</text><text x="15" y="50" font-size="11" fill="#1a3a5c" font-weight="bold">Стена: Типовая 200мм</text><line x1="15" y1="58" x2="265" y2="58" stroke="#b3d9ff"/><text x="15" y="75" font-size="10" fill="#5a8ab5">Конструкция</text><text x="15" y="92" font-size="11" fill="#1a3a5c">Высота: 3000 мм</text><text x="15" y="110" font-size="11" fill="#1a3a5c">Толщина: 200 мм</text><text x="15" y="128" font-size="11" fill="#1a3a5c">Материал: Кирпич</text><text x="15" y="146" font-size="11" fill="#1a3a5c">Объём: 2.4 м³</text><text x="15" y="164" font-size="11" fill="#1a3a5c">Привязка: Уровень 1</text></svg>`,
+  wall_tool: `<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="110" height="110" rx="8" fill="#e6f3ff" stroke="#4a90c2" stroke-width="2"/><rect x="20" y="30" width="80" height="60" fill="#7ab8e0" stroke="#1e5a8a" stroke-width="2"/><rect x="25" y="35" width="15" height="20" fill="#1e5a8a"/><rect x="45" y="35" width="15" height="20" fill="#1e5a8a"/><rect x="65" y="35" width="15" height="20" fill="#1e5a8a"/><rect x="85" y="35" width="10" height="20" fill="#1e5a8a"/><rect x="30" y="60" width="15" height="20" fill="#1e5a8a"/><rect x="50" y="60" width="15" height="20" fill="#1e5a8a"/><rect x="70" y="60" width="15" height="20" fill="#1e5a8a"/><line x1="20" y1="55" x2="100" y2="55" stroke="#1e5a8a" stroke-width="1"/></svg>`,
+  view_cube: `<svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="130" height="130" fill="#f7fbff" stroke="#b3d9ff" stroke-width="1"/><g transform="translate(70,70)"><polygon points="0,-35 30,-17 30,17 0,35 -30,17 -30,-17" fill="#7ab8e0" stroke="#1e5a8a" stroke-width="2"/><polygon points="0,-35 30,-17 0,0 -30,-17" fill="#4a90c2" stroke="#1e5a8a" stroke-width="2"/><polygon points="0,0 30,-17 30,17 0,35" fill="#2d6fa0" stroke="#1e5a8a" stroke-width="2"/><polygon points="0,0 -30,-17 -30,17 0,35" fill="#5a9ac8" stroke="#1e5a8a" stroke-width="2"/><text x="-5" y="-22" fill="white" font-size="8" font-weight="bold">TOP</text><text x="10" y="5" fill="white" font-size="8" font-weight="bold">FR</text><text x="-25" y="5" fill="white" font-size="8" font-weight="bold">LT</text></g></svg>`,
+  ribbon: `<svg width="400" height="120" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="390" height="110" fill="#f7fbff" stroke="#4a90c2" stroke-width="2" rx="4"/><rect x="5" y="5" width="390" height="25" fill="#4a90c2"/><g font-size="10" fill="white" font-weight="bold"><text x="15" y="22">Файл</text><text x="55" y="22">Архитектура</text><text x="125" y="22">Конструкции</text><text x="200" y="22">Системы</text><text x="255" y="22">Вставка</text><text x="305" y="22">Аннотации</text><text x="365" y="22">Вид</text></g><rect x="15" y="40" width="50" height="50" fill="#e6f3ff" stroke="#b3d9ff"/><rect x="70" y="40" width="50" height="50" fill="#e6f3ff" stroke="#b3d9ff"/><rect x="125" y="40" width="50" height="50" fill="#e6f3ff" stroke="#b3d9ff"/><rect x="180" y="40" width="50" height="50" fill="#e6f3ff" stroke="#b3d9ff"/><rect x="235" y="40" width="50" height="50" fill="#e6f3ff" stroke="#b3d9ff"/><rect x="290" y="40" width="50" height="50" fill="#e6f3ff" stroke="#b3d9ff"/><rect x="345" y="40" width="45" height="50" fill="#e6f3ff" stroke="#b3d9ff"/><text x="25" y="105" font-size="9" fill="#5a8ab5">Стена</text><text x="75" y="105" font-size="9" fill="#5a8ab5">Дверь</text><text x="135" y="105" font-size="9" fill="#5a8ab5">Окно</text><text x="185" y="105" font-size="9" fill="#5a8ab5">Колонна</text></svg>`,
+  home_3d: `<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="110" height="110" rx="8" fill="#e6f3ff" stroke="#4a90c2" stroke-width="2"/><g transform="translate(60,60)"><polygon points="0,-30 30,-10 30,25 -30,25 -30,-10" fill="#7ab8e0" stroke="#1e5a8a" stroke-width="2"/><polygon points="0,-30 30,-10 0,0 -30,-10" fill="#4a90c2" stroke="#1e5a8a" stroke-width="2"/><polygon points="-15,25 -15,5 15,5 15,25" fill="#1e5a8a"/><rect x="-8" y="10" width="16" height="15" fill="#e6f3ff"/><circle cx="0" cy="-40" r="3" fill="#f0c674"/></g></svg>`,
+  undo_redo: `<svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="190" height="90" rx="8" fill="#f7fbff" stroke="#4a90c2" stroke-width="2"/><g transform="translate(55,50)"><path d="M -20,0 L -5,-12 L -5,-5 L 15,-5 L 15,5 L -5,5 L -5,12 Z" fill="#4a90c2" stroke="#1e5a8a" stroke-width="1.5"/></g><g transform="translate(145,50)"><path d="M 20,0 L 5,-12 L 5,-5 L -15,-5 L -15,5 L 5,5 L 5,12 Z" fill="#7ab8e0" stroke="#1e5a8a" stroke-width="1.5"/></g></svg>`
+};
+
+// ============================================================
+// 🎮 ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+// ============================================================
+let questions = [];
+let currentQ = 0;
+let answers = []; 
+let startTime, timerInterval, timeLeft = 900;
+let qTimerInterval, qTimeLeft = 0;
+let warnings = 0;
+let studentData = {};
+let testFinished = false;
+
+// ============================================================
+// 🔀 ПЕРЕМЕШИВАНИЕ
+// ============================================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function prepareQuestions() {
+  const shuffled = shuffle(allQuestions);
+  questions = shuffled.slice(0, 15).map((q, idx) => {
+    const newQ = { ...q, originalIndex: idx };
+    if (q.type === 'single' || q.type === 'multiple' || q.type === 'image') {
+      const indices = q.options.map((_, i) => i);
+      const shuffledIdx = shuffle(indices);
+      newQ.options = shuffledIdx.map(i => q.options[i]);
+      if (q.type === 'single' || q.type === 'image') {
+        newQ.correct = shuffledIdx.indexOf(q.correct);
+      } else {
+        newQ.correct = q.correct.map(c => shuffledIdx.indexOf(c)).sort();
+      }
+    }
+    if (q.type === 'match') {
+      newQ.pairs = shuffle(q.pairs);
+      newQ.rightOptions = shuffle(q.pairs.map(p => p.right));
+    }
+    return newQ;
+  });
+  answers = questions.map(() => ({ selected: null, hinted: false, startTime: Date.now() }));
+}
+
+// ============================================================
+// 🚀 СТАРТ
+// ============================================================
+function startTest() {
+  const fio = document.getElementById('fio').value.trim();
+  const group = document.getElementById('group').value.trim();
+  if (!fio || !group) { alert('Укажите ФИО и номер группы!'); return; }
+  studentData = { fio, group, email: document.getElementById('teacherEmail').value.trim(), date: new Date().toLocaleString('ru-RU') };
+  prepareQuestions();
+  document.getElementById('studentInfo').textContent = `${fio} | Группа ${group}`;
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('testScreen').classList.remove('hidden');
+  startTime = Date.now();
+  startTimer();
+  startQTimer();
+  renderDots();
+  renderQuestion();
+  setupTabProtection();
+  setupCopyProtection();
+}
+
+// ============================================================
+// ⏱️ ТАЙМЕРЫ
+// ============================================================
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+    const el = document.getElementById('timer');
+    el.textContent = `⏱️ ${m}:${s.toString().padStart(2, '0')}`;
+    if (timeLeft <= 60) el.classList.add('warning');
+    if (timeLeft <= 0) { clearInterval(timerInterval); alert('⏰ Время вышло!'); finishTest(); }
+  }, 1000);
+}
+function startQTimer() {
+  clearInterval(qTimerInterval);
+  qTimeLeft = 0;
+  qTimerInterval = setInterval(() => {
+    qTimeLeft++;
+    const m = Math.floor(qTimeLeft / 60), s = qTimeLeft % 60;
+    document.getElementById('qTimer').textContent = `⏳ на вопрос: ${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  }, 1000);
+}
+
+// ============================================================
+// 🎯 НАВИГАЦИЯ
+// ============================================================
+function renderDots() {
+  const c = document.getElementById('qDots');
+  c.innerHTML = questions.map((q, i) => {
+    let cls = 'q-dot';
+    if (i === currentQ) cls += ' current';
+    else if (answers[i].hinted) cls += ' hinted';
+    else if (answers[i].selected !== null) cls += ' answered';
+    return `<div class="${cls}" onclick="goToQuestion(${i})">${i+1}</div>`;
+  }).join('');
+}
+function goToQuestion(i) {
+  currentQ = i;
+  answers[i].startTime = Date.now();
+  renderQuestion();
+  renderDots();
+  startQTimer();
+}
+function prevQuestion() { if (currentQ > 0) goToQuestion(currentQ - 1); }
+function nextQuestion() {
+  if (currentQ < questions.length - 1) goToQuestion(currentQ + 1);
+  else { if (confirm('Это последний вопрос. Завершить тест?')) finishTest(); }
+}
+
+// ============================================================
+// 📝 РЕНДЕР ВОПРОСА
+// ============================================================
+function renderQuestion() {
+  const q = questions[currentQ];
+  const a = answers[currentQ];
+  const area = document.getElementById('questionArea');
+  let body = '';
+  if (q.type === 'image' && svgImages[q.image]) {
+    body += `<div class="q-image">${svgImages[q.image]}</div>`;
+  }
+  body += renderBody(q, currentQ);
+  if (a.hinted && q.hint) {
+    body += `<div class="hint-box">💡 ${q.hint}</div>`;
+  }
+  area.innerHTML = `
+    <div class="question">
+      <div class="question-header">
+        <span class="q-number">Вопрос ${currentQ + 1} / ${questions.length}</span>
+        <span class="q-type">${getTypeName(q.type)}</span>
+        <span class="q-difficulty">🎯 ${q.difficulty} | ${q.points} б. ${a.hinted ? '⚠️ -50%' : ''}</span>
+      </div>
+      <div class="q-text">${q.text}</div>
+      ${body}
+    </div>
+  `;
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  document.getElementById('hintBtn').disabled = a.hinted;
+  updateProgress();
+}
+
+function getTypeName(t) {
+  return { single: 'Одиночный выбор', multiple: 'Множественный выбор', truefalse: 'Верно / Неверно', match: 'Соответствие', short: 'Короткий ответ', image: '🖼️ Вопрос с изображением' }[t];
+}
+
+function renderBody(q, i) {
+  const saved = answers[i].selected;
+  if (q.type === 'single' || q.type === 'image') {
+    return q.options.map((opt, j) => `<label class="option ${saved === j ? 'selected' : ''}"><input type="radio" name="q${i}" value="${j}" ${saved === j ? 'checked' : ''} onchange="selectAnswer(${i}, ${j}, 'single')">${opt}</label>`).join('');
+  }
+  if (q.type === 'multiple') {
+    const sel = Array.isArray(saved) ? saved : [];
+    return q.options.map((opt, j) => `<label class="option ${sel.includes(j) ? 'selected' : ''}"><input type="checkbox" name="q${i}" value="${j}" ${sel.includes(j) ? 'checked' : ''} onchange="selectAnswer(${i}, ${j}, 'multiple')">${opt}</label>`).join('');
+  }
+  if (q.type === 'truefalse') {
+    return `<label class="option ${saved === true ? 'selected' : ''}"><input type="radio" name="q${i}" value="true" ${saved === true ? 'checked' : ''} onchange="selectAnswer(${i}, true, 'single')"> ✅ Верно</label><label class="option ${saved === false ? 'selected' : ''}"><input type="radio" name="q${i}" value="false" ${saved === false ? 'checked' : ''} onchange="selectAnswer(${i}, false, 'single')"> ❌ Неверно</label>`;
+  }
+  if (q.type === 'match') {
+    const sel = saved || {};
+    return `<table class="match-table">${q.pairs.map((p, j) => `<tr><td style="background:#e6f3ff; padding:10px; border-radius:6px;"><b>${p.left}</b></td><td><select onchange="selectMatch(${i}, ${j}, this.value)"><option value="">— выберите —</option>${q.rightOptions.map(r => `<option value="${r}" ${sel[j] === r ? 'selected' : ''}>${r}</option>`).join('')}</select></td></tr>`).join('')}</table>`;
+  }
+  if (q.type === 'short') {
+    return `<input type="text" placeholder="Введите ответ..." value="${saved || ''}" oninput="selectAnswer(${i}, this.value, 'short')" style="width:100%; padding:10px; border:2px solid #b3d9ff; border-radius:8px;">`;
+  }
+  return '';
+}
+
+function selectAnswer(i, val, type) {
+  if (type === 'multiple') {
+    const cur = Array.isArray(answers[i].selected) ? answers[i].selected : [];
+    const idx = cur.indexOf(val);
+    if (idx >= 0) cur.splice(idx, 1); else cur.push(val);
+    answers[i].selected = cur.sort();
+  } else {
+    answers[i].selected = val;
+  }
+  renderQuestion();
+  renderDots();
+}
+function selectMatch(i, pairIdx, val) {
+  const cur = answers[i].selected || {};
+  cur[pairIdx] = val;
+  answers[i].selected = cur;
+  renderDots();
+  updateProgress();
+}
+
+// ============================================================
+// 💡 ПОДСКАЗКИ
+// ============================================================
+function showHint() {
+  const q = questions[currentQ];
+  const a = answers[currentQ];
+  if (a.hinted) return;
+  if (!confirm('Использование подсказки снижает балл за вопрос на 50%. Продолжить?')) return;
+  a.hinted = true;
+  renderQuestion();
+  renderDots();
+}
+
+// ============================================================
+// 📊 ПРОГРЕСС
+// ============================================================
+function updateProgress() {
+  let answered = 0;
+  questions.forEach((q, i) => {
+    const s = answers[i].selected;
+    if (s !== null && s !== undefined && s !== '' && !(Array.isArray(s) && s.length === 0)) {
+      if (q.type === 'match') {
+        if (Object.keys(s).length === q.pairs.length) answered++;
+      } else answered++;
+    }
+  });
+  document.getElementById('progressFill').style.width = (answered / questions.length * 100) + '%';
+}
+
+// ============================================================
+// 🚫 ЗАЩИТА ОТ ВКЛАДОК И КОПИРОВАНИЯ
+// ============================================================
+function setupTabProtection() {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && !testFinished) {
+      warnings++;
+      document.getElementById('warnCount').textContent = warnings;
+      document.getElementById('warningOverlay').style.display = 'flex';
+      setTimeout(() => {
+        document.getElementById('warningOverlay').style.display = 'none';
+        if (warnings >= 3) { alert('🚫 Превышен лимит! Тест завершён.'); finishTest(); }
+      }, 3000);
+    }
+  });
+}
+function setupCopyProtection() {
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && ['c','v','x','a','u','p'].includes(e.key.toLowerCase())) {
+      if (e.key.toLowerCase() !== 'v') { e.preventDefault(); alert('🚫 Копирование запрещено!'); }
+    }
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(e.key.toLowerCase()))) e.preventDefault();
+  });
+  document.addEventListener('selectstart', e => e.preventDefault());
+}
+
+// ============================================================
+// ✅ ПРОВЕРКА ОТВЕТОВ (Разделение на студента и преподавателя)
+// ============================================================
+function checkAnswers() {
+  let totalPoints = 0, maxPoints = 0, correct = 0, wrong = 0, hintsUsed = 0;
+  const studentDetails = [];
+  const teacherDetails = [];
+
+  questions.forEach((q, i) => {
+    maxPoints += q.points;
+    let earned = 0, isCorrect = false;
+    const s = answers[i].selected;
+    if (answers[i].hinted) hintsUsed++;
+    const mult = answers[i].hinted ? 0.5 : 1;
+    let correctAnswerText = "";
+
+    if (q.type === 'single' || q.type === 'image') {
+      isCorrect = s === q.correct;
+      earned = isCorrect ? q.points * mult : 0;
+      correctAnswerText = q.options[q.correct];
+      studentDetails.push({ q: q.text, student: s !== null ? q.options[s] : '—', correct: '*** (Скрыто)', isCorrect });
+      teacherDetails.push({ q: q.text, student: s !== null ? q.options[s] : '—', correct: correctAnswerText, isCorrect });
+    } else if (q.type === 'multiple') {
+      const sel = Array.isArray(s) ? s : [];
+      isCorrect = JSON.stringify(sel) === JSON.stringify(q.correct);
+      earned = isCorrect ? q.points * mult : 0;
+      correctAnswerText = q.correct.map(c => q.options[c]).join('; ');
+      studentDetails.push({ q: q.text, student: sel.map(c => q.options[c]).join('; ') || '—', correct: '*** (Скрыто)', isCorrect });
+      teacherDetails.push({ q: q.text, student: sel.map(c => q.options[c]).join('; ') || '—', correct: correctAnswerText, isCorrect });
+    } else if (q.type === 'truefalse') {
+      isCorrect = s === q.correct;
+      earned = isCorrect ? q.points * mult : 0;
+      correctAnswerText = q.correct ? 'Верно' : 'Неверно';
+      studentDetails.push({ q: q.text, student: s === null ? '—' : (s ? 'Верно' : 'Неверно'), correct: '*** (Скрыто)', isCorrect });
+      teacherDetails.push({ q: q.text, student: s === null ? '—' : (s ? 'Верно' : 'Неверно'), correct: correctAnswerText, isCorrect });
+    } else if (q.type === 'match') {
+      const sel = s || {};
+      let matches = 0;
+      const studentAns = [];
+      q.pairs.forEach((p, j) => {
+        const v = sel[j];
+        studentAns.push(`${p.left} → ${v || '—'}`);
+        if (v === p.right) matches++;
+      });
+      earned = (matches / q.pairs.length) * q.points * mult;
+      isCorrect = matches === q.pairs.length;
+      correctAnswerText = q.pairs.map(p => `${p.left} → ${p.right}`).join(' | ');
+      studentDetails.push({ q: q.text, student: studentAns.join(' | '), correct: '*** (Скрыто)', isCorrect });
+      teacherDetails.push({ q: q.text, student: studentAns.join(' | '), correct: correctAnswerText, isCorrect });
+    } else if (q.type === 'short') {
+      const val = (s || '').trim().toLowerCase();
+      isCorrect = q.answers.some(a => a.toLowerCase() === val);
+      earned = isCorrect ? q.points * mult : 0;
+      correctAnswerText = q.answers.join(' / ');
+      studentDetails.push({ q: q.text, student: val || '—', correct: '*** (Скрыто)', isCorrect });
+      teacherDetails.push({ q: q.text, student: val || '—', correct: correctAnswerText, isCorrect });
+    }
+    if (isCorrect) correct++; else wrong++;
+    totalPoints += earned;
+  });
+  const finalScore = Math.round((totalPoints / maxPoints) * 10 * 10) / 10;
+  return { finalScore, correct, wrong, studentDetails, teacherDetails, totalPoints, maxPoints, hintsUsed };
+}
+
+// ============================================================
+// 🏁 ЗАВЕРШЕНИЕ
+// ============================================================
+function finishTest() {
+  if (testFinished) return;
+  testFinished = true;
+  clearInterval(timerInterval);
+  clearInterval(qTimerInterval);
+  const timeSpent = Math.round((Date.now() - startTime) / 1000);
+  const result = checkAnswers();
+  studentData.timeSpent = timeSpent;
+  studentData.result = result;
+  studentData.warnings = warnings;
+  document.getElementById('testScreen').classList.add('hidden');
+  document.getElementById('resultScreen').classList.remove('hidden');
+  document.getElementById('finalScore').textContent = result.finalScore;
+  document.getElementById('correctCount').textContent = result.correct;
+  document.getElementById('wrongCount').textContent = result.wrong;
+  document.getElementById('timeSpent').textContent = timeSpent;
+  document.getElementById('hintsUsed').textContent = result.hintsUsed;
+  let grade = result.finalScore >= 9 ? '🏆 Отлично (9-10)' : result.finalScore >= 7 ? '👍 Хорошо (7-8)' : result.finalScore >= 5 ? '📘 Удовлетворительно (5-6)' : '📕 Неудовлетворительно (менее 5)';
+  document.getElementById('gradeText').textContent = grade;
+  sendToGoogleSheets();
+}
+
+// ============================================================
+// 📊 GOOGLE SHEETS (Преподаватель видит правильные ответы)
+// ============================================================
+async function sendToGoogleSheets() {
+  const statusEl = document.getElementById('gsStatus');
+  if (!GOOGLE_SCRIPT_URL) {
+    statusEl.innerHTML = '<span class="gs-status" style="background:#fff3cd;color:#856404;">⚠️ Google Sheets не настроен (URL пуст в коде)</span>';
+    return;
+  }
+  const r = studentData.result;
+  const payload = {
+    fio: studentData.fio, group: studentData.group, email: studentData.email,
+    score: r.finalScore, correct: r.correct, wrong: r.wrong,
+    timeSpent: studentData.timeSpent, hints: r.hintsUsed, warnings: warnings,
+    details: JSON.stringify(r.teacherDetails) // Преподаватель получает полные данные с правильными ответами
+  };
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    statusEl.innerHTML = '<span class="gs-status" style="background:#d4edda;color:#155724;">✅ Результаты отправлены в Google Таблицу преподавателя</span>';
+  } catch (e) {
+    statusEl.innerHTML = '<span class="gs-status" style="background:#f8d7da;color:#721c24;">❌ Ошибка отправки в Google Sheets</span>';
+  }
+}
+
+// ============================================================
+// 📥 EXCEL (Студент НЕ видит правильные ответы)
+// ============================================================
+function downloadExcel() {
+  const r = studentData.result;
+  const rows = [
+    ['ОТЧЁТ ПО ТЕСТУ REVIT'],
+    [],
+    ['ФИО', studentData.fio],
+    ['Группа', studentData.group],
+    ['Дата и время', studentData.date],
+    ['Затрачено времени (сек)', studentData.timeSpent],
+    ['Предупреждений', studentData.warnings],
+    ['Использовано подсказок', r.hintsUsed],
+    [],
+    ['ИТОГОВЫЙ БАЛЛ (из 10)', r.finalScore],
+    ['Правильных ответов', r.correct],
+    ['Неправильных ответов', r.wrong],
+    ['Набрано баллов', r.totalPoints.toFixed(2)],
+    ['Максимум баллов', r.maxPoints.toFixed(2)],
+    [],
+    ['№', 'Тип вопроса', 'Вопрос', 'Ответ студента', 'Правильный ответ', 'Результат']
+  ];
+  r.studentDetails.forEach((d, i) => {
+    // Здесь используется studentDetails, где correct = '*** (Скрыто)'
+    rows.push([i + 1, getTypeName(questions[i].type), d.q, d.student, d.correct, d.isCorrect ? '✅' : '❌']);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:5},{wch:20},{wch:50},{wch:40},{wch:20},{wch:10}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Результаты');
+  XLSX.writeFile(wb, `Revit_Test_${studentData.fio.replace(/\s+/g,'_')}_${Date.now()}.xlsx`);
+}
+
+// ============================================================
+// 📧 EMAIL
+// ============================================================
+function sendEmail() {
+  const r = studentData.result;
+  const subject = encodeURIComponent(`Результаты теста Revit — ${studentData.fio}`);
+  const body = encodeURIComponent(
+`Здравствуйте!
+
+Студент: ${studentData.fio}
+Группа: ${studentData.group}
+Дата: ${studentData.date}
+Время: ${studentData.timeSpent} сек.
+Предупреждений: ${studentData.warnings}
+Подсказок: ${r.hintsUsed}
+
+ИТОГ: ${r.finalScore} / 10
+Правильных: ${r.correct}
+Неправильных: ${r.wrong}
+
+С уважением, ${studentData.fio}`
+  );
+  window.location.href = `mailto:${studentData.email}?subject=${subject}&body=${body}`;
+}
+
+// ============================================================
+// 🏆 СЕРТИФИКАТ
+// ============================================================
+function showCertificate() {
+  const r = studentData.result;
+  const area = document.getElementById('certificateArea');
+  area.innerHTML = `
+    <div class="certificate" id="printableCert">
+      <div class="cert-header">
+        <div class="cert-seal">САПР<br>2026</div>
+        <div class="cert-title">СЕРТИФИКАТ</div>
+        <div class="cert-subtitle">о прохождении теста по Autodesk Revit</div>
+      </div>
+      <div class="cert-body">
+        <p>Настоящий сертификат подтверждает, что</p>
+        <div class="cert-name">${studentData.fio}</div>
+        <p>группа <b>${studentData.group}</b></p>
+        <p>успешно прошёл(а) контрольный тест по дисциплине</p>
+        <p><b>«Системы автоматизированного проектирования»</b></p>
+        <p>раздел: <i>Введение. Интерфейс Revit. Базовые инструменты</i></p>
+        <div class="cert-score">${r.finalScore} / 10</div>
+        <p>Результат: <b>${r.finalScore >= 9 ? 'Отлично' : r.finalScore >= 7 ? 'Хорошо' : r.finalScore >= 5 ? 'Удовлетворительно' : 'Неудовлетворительно'}</b></p>
+        <p style="font-size:14px; color:#5a8ab5;">Правильных ответов: ${r.correct} | Время: ${studentData.timeSpent} сек. | Дата: ${studentData.date}</p>
+      </div>
+      <div class="cert-footer">
+        <div class="cert-sign"><div class="cert-sign-line"></div><div>Преподаватель</div></div>
+        <div class="cert-sign"><div class="cert-sign-line"></div><div>Студент</div></div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:15px;" class="no-print">
+      <button class="btn" onclick="window.print()">🖨️ Печать / Сохранить PDF</button>
+    </div>
+  `;
+  area.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
